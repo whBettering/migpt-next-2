@@ -2,7 +2,7 @@
 
 让小爱音箱接上大模型（豆包、DeepSeek、ChatGPT 等都可以），让它更聪明。
 
-> 基于 [MiGPT-Next](https://github.com/idootop/migpt-next) 二次开发。官方版已停止维护，本版新增了「小爱抢话」「不能联网」等亮点。
+> 基于 [MiGPT-Next](https://github.com/idootop/migpt-next) 二次开发。官方版已停止维护，本版新增了防抢话、联网搜索、保留小爱原生回答、网络代理、非流式问答等亮点。
 
 ## 它能做什么？
 
