@@ -3,13 +3,13 @@ import test from 'node:test';
 
 import config from '../config.js';
 
-function createEngine(calls) {
+function createEngine(calls, { abortResult = true } = {}) {
   return {
     config,
     speaker: {
       async abortXiaoAI() {
         calls.push(['abort']);
-        return true;
+        return abortResult;
       },
     },
     MiOT: {
@@ -104,4 +104,30 @@ test('uses the external LLM for explicit XiaoAI failure answers', async () => {
       ['tts', 5, 3, '这是豆包返回的答案'],
     ]);
   }
+});
+
+test('continues to the thinking prompt when native playback cannot be stopped', async () => {
+  const calls = [];
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnings.push(args.join(' '));
+  try {
+    await config.onMessage(createEngine(calls, { abortResult: false }), {
+      id: 'message-stop-failed',
+      sender: 'user',
+      text: '小爱不会的问题',
+      timestamp: 99,
+      metadata: { xiaoAIAnswer: '被你问住了', xiaoAIAnswerType: 'TTS' },
+    });
+  } finally {
+    console.warn = originalWarn;
+  }
+
+  assert.match(warnings[0], /未能确认已停止小爱原生播报/);
+  assert.deepEqual(calls, [
+    ['abort'],
+    ['tts', 5, 3, '正在思考中'],
+    ['askAI', '小爱不会的问题', { stream: false }],
+    ['tts', 5, 3, '这是豆包返回的答案'],
+  ]);
 });

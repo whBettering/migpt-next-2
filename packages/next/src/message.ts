@@ -1,12 +1,48 @@
 import { randomUUID } from 'node:crypto';
 import type { IMessage } from '@mi-gpt/chat';
-import { firstOf, lastOf } from '@mi-gpt/utils';
-import { MiService } from './service.js';
+import { firstOf, lastOf, sleep } from '@mi-gpt/utils';
 import { extractNativeAnswer } from './native-answer.js';
+import { MiService } from './service.js';
 
-class _MiMessage {
+interface ConversationRecord {
+  answers: Array<{
+    type: string;
+    tts?: { text?: string };
+    llm?: { text?: string };
+  }>;
+  query: string;
+  requestId?: string;
+  time: number;
+}
+
+interface MiMessageManagerOptions {
+  getConversations?: (options?: {
+    limit?: number;
+    timestamp?: number;
+  }) => Promise<{ records: ConversationRecord[] } | undefined> | undefined;
+  sleep?: (milliseconds: number) => Promise<void>;
+  pendingPollInterval?: number;
+  pendingPollTimeout?: number;
+}
+
+export class MiMessageManager {
   private _lastQueryMsg?: IMessage;
   private _tempQueryMsgs: IMessage[] = [];
+  private readonly _getConversations: NonNullable<MiMessageManagerOptions['getConversations']>;
+  private readonly _sleep: NonNullable<MiMessageManagerOptions['sleep']>;
+  private readonly _pendingPollInterval: number;
+  private readonly _pendingPollTimeout: number;
+
+  constructor(options: MiMessageManagerOptions = {}) {
+    this._getConversations =
+      options.getConversations ?? ((request) => MiService.MiNA?.getConversations(request));
+    this._sleep = options.sleep ?? sleep;
+    this._pendingPollInterval = Math.max(50, options.pendingPollInterval ?? 100);
+    this._pendingPollTimeout = Math.max(
+      this._pendingPollInterval,
+      options.pendingPollTimeout ?? 2000,
+    );
+  }
 
   async fetchNextMessage(): Promise<IMessage | undefined> {
     if (!this._lastQueryMsg) {
@@ -42,7 +78,19 @@ class _MiMessage {
    * 拉取最新的 2 条消息，用于和上一条消息比对是否连续
    */
   private async _fetchNext2Messages() {
-    const msgs = await this._fetchHistoryMsgs({ limit: 2 });
+    let msgs = await this._fetchHistoryMsgs({ limit: 2, filterAnswer: false });
+    const newest = firstOf(msgs);
+    if (
+      newest &&
+      newest.timestamp > this._lastQueryMsg!.timestamp &&
+      !this._hasNativeAnswer(newest)
+    ) {
+      const completed = await this._waitForNativeAnswer(newest);
+      if (!completed) {
+        return;
+      }
+      msgs = completed;
+    }
     if (msgs.length < 1 || firstOf(msgs)!.timestamp <= this._lastQueryMsg!.timestamp) {
       // 没有拉到新消息
       return;
@@ -62,6 +110,28 @@ class _MiMessage {
       }
     }
     return 'continue';
+  }
+
+  private _hasNativeAnswer(msg: IMessage) {
+    return typeof msg.metadata?.xiaoAIAnswer === 'string';
+  }
+
+  private async _waitForNativeAnswer(pending: IMessage): Promise<IMessage[] | undefined> {
+    for (
+      let elapsed = 0;
+      elapsed < this._pendingPollTimeout;
+      elapsed += this._pendingPollInterval
+    ) {
+      await this._sleep(this._pendingPollInterval);
+      const msgs = await this._fetchHistoryMsgs({ limit: 2, filterAnswer: false });
+      const current = msgs.find(
+        (msg) => msg.id === pending.id || msg.timestamp === pending.timestamp,
+      );
+      if (current && this._hasNativeAnswer(current)) {
+        return msgs;
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -113,7 +183,7 @@ class _MiMessage {
     filterAnswer?: boolean;
   }): Promise<IMessage[]> {
     const filterAnswer = options?.filterAnswer ?? true;
-    const conversation = await MiService.MiNA?.getConversations(options);
+    const conversation = await this._getConversations(options);
     let records = conversation?.records ?? [];
     if (filterAnswer) {
       // 过滤有小爱回答的消息
@@ -126,7 +196,7 @@ class _MiMessage {
     return records.map((e) => {
       const nativeAnswer = extractNativeAnswer(e);
       return {
-        id: randomUUID(),
+        id: e.requestId || randomUUID(),
         sender: 'user',
         text: e.query,
         timestamp: e.time,
@@ -141,4 +211,4 @@ class _MiMessage {
   }
 }
 
-export const MiMessage = new _MiMessage();
+export const MiMessage = new MiMessageManager();

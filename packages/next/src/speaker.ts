@@ -22,11 +22,10 @@ class SpeakerManager implements ISpeaker {
    * 中断原来小爱的运行
    */
   async abortXiaoAI() {
-    if (MiService.MiNA) {
-      // 尝试停止当前播放
-      await MiService.MiNA.stop();
+    if (!MiService.MiNA) {
+      return false;
     }
-    return false;
+    return MiService.MiNA.stop();
   }
 }
 
