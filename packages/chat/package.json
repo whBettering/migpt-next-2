@@ -1,0 +1,51 @@
+{
+  "version": "1.1.1",
+  "name": "@mi-gpt/chat",
+  "description": "MiGPT 对话模块",
+  "keywords": ["migpt"],
+  "type": "module",
+  "scripts": {
+    "build": "tsup"
+  },
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "require": "./dist/*.cjs",
+      "import": "./dist/*.js"
+    }
+  },
+  "dependencies": {
+    "@mi-gpt/openai": "workspace:*",
+    "@mi-gpt/stream": "workspace:*",
+    "@mi-gpt/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@mi-gpt/config": "workspace:*",
+    "@types/node": "^22.14.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "sideEffects": false,
+  "packageManager": "pnpm@9.15.9",
+  "license": "MIT",
+  "author": {
+    "name": "Del Wang",
+    "email": "hello@xbox.work",
+    "url": "https://github.com/idootop"
+  },
+  "homepage": "https://github.com/idootop/migpt-next",
+  "bugs": "https://github.com/idootop/migpt-next/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/idootop/migpt-next.git"
+  }
+}

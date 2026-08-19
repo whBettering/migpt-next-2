@@ -1,0 +1,5 @@
+{
+  "extends": "./assets/typescript.json",
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,7 @@
+FROM idootop/migpt-next:latest
+
+# Keep credentials outside the image. Mount config.js at /app/config.js when running.
+COPY packages/miot/dist/ /app/node_modules/@mi-gpt/miot/dist/
+COPY packages/openai/dist/ /app/node_modules/@mi-gpt/openai/dist/
+COPY packages/engine/dist/ /app/node_modules/@mi-gpt/engine/dist/
+COPY packages/next/dist/ /app/node_modules/@mi-gpt/next/dist/

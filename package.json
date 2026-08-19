@@ -1,0 +1,21 @@
+{
+  "name": "packages",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "postinstall": "[ -n \"$CI\" ] || lefthook install",
+    "publish-packages": "changeset version && turbo run build && changeset publish && git push --follow-tags"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@changesets/cli": "^2.28.1",
+    "@mi-gpt/config": "workspace:*",
+    "lefthook": "^1.11.5",
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.2"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=16"
+  }
+}

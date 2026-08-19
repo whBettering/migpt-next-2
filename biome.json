@@ -1,0 +1,3 @@
+{
+  "extends": ["@mi-gpt/config/biome"]
+}

@@ -1,0 +1,48 @@
+{
+  "version": "1.1.0",
+  "name": "@mi-gpt/config",
+  "description": "MiGPT 公共配置",
+  "keywords": ["migpt"],
+  "type": "module",
+  "scripts": {
+    "build": "tsup"
+  },
+  "files": ["dist", "assets"],
+  "exports": {
+    "./biome": {
+      "require": "./assets/biome.json",
+      "import": "./assets/biome.json"
+    },
+    "./typescript": {
+      "require": "./assets/typescript.json",
+      "import": "./assets/typescript.json"
+    },
+    "./tsup": {
+      "types": "./dist/tsup.config.d.ts",
+      "require": "./dist/tsup.config.cjs",
+      "import": "./dist/tsup.config.js"
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "sideEffects": false,
+  "packageManager": "pnpm@9.15.9",
+  "license": "MIT",
+  "author": {
+    "name": "Del Wang",
+    "email": "hello@xbox.work",
+    "url": "https://github.com/idootop"
+  },
+  "homepage": "https://github.com/idootop/migpt-next",
+  "bugs": "https://github.com/idootop/migpt-next/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/idootop/migpt-next.git"
+  }
+}
