@@ -1,5 +1,7 @@
 function isXiaoAIAnswerFailure(text) {
-  return /(?:我(?:还|暂时|暂不|也)?(?:不知道|不知道咋说|不太清楚|不支持|不会|回答不上)|不太清楚|无法(?:回答|理解|获取|处理)|没法回答|回答不了|没听懂|不明白.{0,8}(?:说|意思)|换个问题|我还在学习|(?:你|我).{0,4}(?:问住|难住)了|被难住了(?:诶|呢|呀|哦)?|暂不支持(?:该|此)?功能|不知道咋说|还.{0,4}(?:支持.{0,6}功能|学习)|不如换.{0,6}(?:方式|问题|说)|超出.{0,6}(?:能力|范围)|(?:没有|无法)找到.{0,8}(?:答案|结果|内容)|(?:暂时|还)回答不)/i.test(text);
+  return /(?:我(?:还|暂时|暂不|也)?(?:不知道|不知道咋说|不太清楚|不支持|不会|回答不上)|不太清楚|无法(?:回答|理解|获取|处理)|没法回答|回答不了|没听懂|不明白.{0,8}(?:说|意思)|换个问题|我还在学习|(?:你|我).{0,4}(?:问住|难住)了|被难住了(?:诶|呢|呀|哦)?|暂不支持(?:该|此)?功能|不知道咋说|还.{0,4}(?:支持.{0,6}功能|学习)|不如换.{0,6}(?:方式|问题|说)|超出.{0,6}(?:能力|范围)|(?:没有|无法)找到.{0,8}(?:答案|结果|内容)|(?:暂时|还)回答不)/i.test(
+    text,
+  );
 }
 
 /**
@@ -112,9 +114,7 @@ export default {
     }
 
     const xiaoAIAnswer =
-      typeof msg.metadata?.xiaoAIAnswer === 'string'
-        ? msg.metadata.xiaoAIAnswer.trim()
-        : '';
+      typeof msg.metadata?.xiaoAIAnswer === 'string' ? msg.metadata.xiaoAIAnswer.trim() : '';
     if (xiaoAIAnswer && !isXiaoAIAnswerFailure(xiaoAIAnswer)) {
       console.log(`🔈 保留小爱原生回答：${xiaoAIAnswer}`);
       return { handled: true };
@@ -124,7 +124,10 @@ export default {
     }
 
     // L05B 的 MiNA TTS 无法稳定抢占小爱原生回复，改用 MIoT 的“播放文本”动作。
-    await engine.speaker.abortXiaoAI();
+    const stopped = await engine.speaker.abortXiaoAI();
+    if (!stopped) {
+      console.warn('⚠️ 未能确认已停止小爱原生播报，继续切换外接 LLM');
+    }
     await engine.MiOT.doAction(5, 3, '正在思考中');
 
     const { text } = await engine.askAI(msg, { stream: false });
